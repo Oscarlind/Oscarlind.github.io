@@ -13,7 +13,7 @@ What we need to do here is to ensure that the private key is well stored. But ho
 
 Below I will describe two possible implementations of Sealed Secrets in multi-cluster environments.
 
-### Scenario 1 - Separate keys per cluster
+### Scenario 1 - Separate keys
 
 In this scenario we deploy Sealed Secrets in each cluster and let the tool generate its own keys. What is important to think about in this scenario is that a Sealed Secret that is created with a controller for one cluster can’t be used in another. This is since it can’t be decrypted there. Therefore we need to be observant when we encrypt our secret and also when we apply it to our cluster.
 
@@ -25,7 +25,7 @@ Why? Because in Cluster-2 and Cluster-3 our controllers have different private k
 
 In this example with three clusters we also have three different private keys to keep track of. We can quickly see that this alternative gets more complicated the more clusters it is used on.
 
-### Scenario 2 - Same key, multiple clusters
+### Scenario 2 - Single key
 
 When we deploy Sealed Secrets the controller creates its own private key and associated certificate. However, we can add to this by giving it our own certificate/private keys. When the controller gets deployed it searches for a secret called sealed-secrets-key as well as secrets with the label sealedsecrets.bitnami.com/sealed-secrets-key=active. This or these secrets must exist in the same namespace as our controller.
 
@@ -39,7 +39,7 @@ By deploying a controller and then extracting its private key, we can then also 
 Advantages with this method is that the tool gets a lot simpler to scale. We do not need to think about which Sealed Secret belongs to which cluster. To only manage a single private key is also a lot easier than managing several.
 
 Of course, this also increases the importance of the private key. It should naturally be managed in an appropriate manner - for example through a vault. 
-### In practice - Scenario 2
+### Deploying with a Single Key Strategy
 
 First thing we need to do is set up Sealed Secrets in our cluster and install the CLI if we do not already have it.
 
@@ -149,7 +149,7 @@ Now when we deploy Sealed Secrets we can verify that it actually uses the key we
 ```yaml
 oc logs sealed-secrets-controller-69c88fd9dc-kwdqt
 controller version: v0.16.0
-2021/08/25 09:30:17 Starting sealed-secrets cpntroller version: v0.16.0
+2021/08/25 09:30:17 Starting sealed-secrets controller version: v0.16.0
 2021/08/25 09:30:17 Searching for existing private keys
 2021/08/25 09:30:17 ----- sealed-secrets-key
 2021/08/25 09:30:17 HTTP server serving on :8080
