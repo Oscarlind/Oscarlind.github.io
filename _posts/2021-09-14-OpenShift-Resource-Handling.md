@@ -7,16 +7,16 @@ From a more administrative point of view it is perhaps more interesting to know 
 
 In OpenShift (and k8s) we use several different components to make sure that our applications and users have the resources they need while at the same time, individuals can’t seize the entire capacity of the cluster.
 
-We do this, among other things, carefully designed **Quotas, LimitRanges, Requests and Limits**. I will briefly describe below how these components work and how they are related to each other.
+We do this, mainly, by using carefully designed **Quotas, LimitRanges, Requests and Limits**. I will briefly describe below how these components work and how they are related to each other.
 
 ### Requests and Limits
 
 When we deploy our application in a cluster, there are no limits to how much resources it can use. It will be placed on one of the available nodes by the scheduler at the time of deployment and thereafter it can go ahead and use the node’s resources as needed.
 
 This is usually not desirable as it can easily lead to various problems. To a name a few:
-There are no barriers for the application to use excessive amounts of resources (due to memory leaks or other problems), thus limiting resources for other applications in the cluster.
-The scheduler does not know which node would have been the best to place the application on. This is because it has no idea about the expected use of resources.
-Resources become “first come, first served”, which can lead to a very uneven distribution of resources among different teams.
+1. There are no barriers for the application to use excessive amounts of resources (due to memory leaks or other problems), thus limiting resources for other applications in the cluster.
+2. The scheduler does not know which node would have been the best to place the application on. This is because it has no idea about the expected use of resources.
+3. Resources become “first come, first served”, which can lead to a very uneven distribution of resources among different teams.
 
 To get around this, we use Requests and Limits in our deployments.
 
@@ -87,9 +87,13 @@ However, if the application also has a limit of 2Gi memory, it is possible for i
 A node is overcommited when it has a pod placed on it that has no request defined at all, or if the sum of all the limits of the pods running on the node is greater than the node's actual capacity.
 
 
-When we create these overcommits, it becomes easier for us to use the cluster's resources efficiently. One consequence, however, is that it becomes theoretically possible that a large number of applications need access to these extra resources at the same time and we can then encounter problems as the node (s)'s capacity is not enough for everyone. When this happens, the node prioritizes pods according to **Quality of Service** - which can be read more about in the references.
+When we create these overcommitments, it becomes easier for us to use the cluster's resources efficiently. One consequence, however, is that it becomes theoretically possible that a large number of applications need access to these extra resources at the same time and we can then encounter problems as the node/s capacity is not enough for everyone. When this happens, the node prioritizes pods according to **Quality of Service** - which can be read more about in the references.
 
-We can see how much a node is overcommited by inspecting it. We do this most easily by running and describing node <node name>.
+We can see how much a node is overcommited by inspecting it. We do this most easily by describing the node.
+
+```sh
+oc describe node/<node-name>
+```
 
 ### Quotas
 
@@ -108,7 +112,7 @@ spec:
 ```
 
 1. Amount of resources in limits that we can request.
-2. Amount of resources in requests that we can request.
+2. Amount of resources in requests that we can ask for.
 3. The scope of the quota.
 
 Simply described, it is a configuration that determines the amount of resources we can request. Note that this has **nothing** to do with the actual use of resources but instead is linked to Requests and Limits.
@@ -132,16 +136,16 @@ spec:
   - default:                   <  #1
       memory: 1Gi
       cpu: “2”
-    defaultRequests:    < #2
+    defaultRequests:           < #2
       memory: 128Mi
       cpu: “50”
     max:                       < #3
       cpu: “4”
       memory: 5Gi
-    min:                        < #4
+    min:                       < #4
       cpu: “25m”
       memory 32Mi
-    type: Container      < #5
+    type: Container            < #5
 ```
 
 1. Default limits that are set if we do not actively define limits in our deployment
@@ -150,7 +154,7 @@ spec:
 4. Minimum values we are allowed to specify in our deployment
 5. The object we are referring to. Can be a Container or Pod.
 
-Once we have configured a LimitRange with default values, we have also made it possible to deploy applications without specifying Requests and or Limits. What happens is that the default values will be applied at startup.
+Once we have configured a LimitRange with default values, we have also made it possible to deploy applications without specifying Requests and or Limits. What happens is that the default values will be applied at the time of deployment.
 
 ### Configuring LimitRanges
 
@@ -193,7 +197,7 @@ spec:
 
 We have therefore decided that in this namespace  you can make requests for a total of 12 CPU and 12Gi memory. In addition, you can set limits of up to 24 CPU and 24Gi memory.
 
-When this quota is met and we try to deploy a new application, it will not work, as our quota is over. We will see the cause of this in the namespace event logs.
+When this quota is met and we try to deploy a new application, it will not work, as our quota is out. We will see the cause of this in the namespace event logs.
 
 It is also not possible to deploy any application in this namespace if it has not specified **requests and limits**. We will instead discover that our pods do not come up even though our deployment / deploymentConfig does. By reading the event logs, we see the error message that informs us about our problem.
 
@@ -229,9 +233,19 @@ spec:
 
 With this LimitRange we have decided that each Container max may request 4 CPU and 5 Gi memory. They must request at least 25 millicores and 32Mi of memory.
 
-In addition to this, we have set default values. Unlike when we only had our quota, we can now deploy applications without setting requests and limits. What happens instead is that our application retrieves the default values, from the limitRange, at startup and uses these.
+In addition to this, we have set default values. Unlike when we only had our quota, we can now deploy applications without setting requests and limits. What happens instead is that our application retrieves the default values, from the limitRange, at the time of deployment and uses these.
 
 We can still define our own values as long as these do not exceed the maximum or go below the minimum requirements of our LimitRange.
+
+## Conclusions
+
+Resource management in K8s/OpenShift is handled by several different components and these are the main ones. A lot of issues with cluster resources boils down to a lack of understanding of how this works and how the different parts work together. 
+
+Requests determine the actual resources you reserve for your application. Limits set the values you cannot have the application exceed.
+
+Quotas are the amount of resources you are allowed to specify in Requests and Limits (not actual usage)
+
+LimitRanges set the maximum amount of resources we are allowed to request as well as the minimum. They also allow us to make use of default values which are taken into effect if no requests/limits are specified.
 
 ## References
 
