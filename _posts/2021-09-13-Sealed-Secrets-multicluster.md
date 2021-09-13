@@ -9,7 +9,7 @@ A popular one is called Sealed Secrets. This tool lets us encrypt standard Kuber
 
 The concept is quite straightforward. We have a private key in the cluster and use a public key to encrypt our secrets. These encrypted secrets can then be added to our repository. When we want to use our secret, we apply the encrypted secret and the controller in our cluster will thereafter use the private key to decrypt it and create a regular Kubernetes secret of it.
 
-What we need to do here is to ensure that the private key is well stored. But how does this work when we have multiple clusters? Since we have a private key per controller does this mean we will use different keys for different clusters? The answer to this is, we can but we do not need to.
+What we need to do here is to ensure that the private key is well stored. But how does this work when we have multiple clusters? Since we have a private key per controller does this mean we will use different keys for different clusters? The answer to this is, we *can* but we do not *need* to.
 
 Below I will describe two possible implementations of Sealed Secrets in multi-cluster environments.
 
@@ -27,7 +27,7 @@ In this example with three clusters we also have three different private keys to
 
 ### Scenario 2 - Single key
 
-When we deploy Sealed Secrets the controller creates its own private key and associated certificate. However, we can add to this by giving it our own certificate/private keys. When the controller gets deployed it searches for a secret called sealed-secrets-key as well as secrets with the label sealedsecrets.bitnami.com/sealed-secrets-key=active. This or these secrets must exist in the same namespace as our controller.
+When we deploy Sealed Secrets the controller creates its own private key and associated certificate. However, we can add to this by giving it our own certificate/private keys. When the controller gets deployed it searches for a secret called **sealed-secrets-key** as well as secrets with the label **sealedsecrets.bitnami.com/sealed-secrets-key=active**. This or these secrets must exist in the same namespace as our controller.
 
 
 This gives us the opportunity to use the same key and certificate for several clusters.
@@ -134,7 +134,7 @@ We can now do a base64 --decode on these values and get the actual certificate a
 
 Now that we have these files we can use them for a Sealed Secret controller in a new cluster.
 
-To understand how this works we need to understand what the controller does when it gets deployed. When we set up Sealed Secrets in the cluster, we spin up a controller that looks for a secret in the same namespace called sealed-secret-key. If this secret does not exist it will get generated - and will then get a name such as sealed-secrets-keyXXXXX.
+To understand how this works we need to understand what the controller does when it gets deployed. When we set up Sealed Secrets in the cluster, we spin up a controller that looks for a secret in the same namespace called **sealed-secrets-key**. If this secret does not exist it will get generated - and will then get a name such as **sealed-secrets-keyXXXXX**.
 
 On the other hand, if there already is a secret with this name in the namespace the controller will make use of it. In this way we can control the actual key that is going to be used by default for our cluster.
 
@@ -160,15 +160,14 @@ controller version: v0.16.0
 *Searching for existing private keys
 ----- sealed-secrets-key*
 
-  
+
 This shows that it did not have to generate the secret by itself, but searched after and found the one we just created. 
 
 Since this secret is identical to the earlier one, the same Sealed Secret - the one we created in the first cluster - can be decrypted even in this second cluster.
 
-Note: When a secret gets encrypted, its name and namespace is used during the actual encryption process. This means that
-
-1. It can only be decrypted if the name of the secret is the same as when it was encrypted.
-2. It can only be decrypted in the namespace it was encrypted for. In other words, if the secret was created for namespace1 it won't be able to get decrypted in namespace2. 
+>- **NOTE:** When a secret gets encrypted, its name and namespace is used during the actual encryption process. This means that 
+>1. It can only be decrypted if the name of the secret is the same as when it was encrypted.
+>2. It can only be decrypted in the namespace it was encrypted for. In other words, if the secret was created for namespace1 it won't be able to get decrypted in namespace2. 
 
 These are security measures and default settings. We can change these by using the --scope argument when encrypting our secret.
 
