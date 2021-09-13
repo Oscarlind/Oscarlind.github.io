@@ -172,6 +172,9 @@ Note: When a secret gets encrypted, its name and namespace is used during the ac
 
 These are security measures and default settings. We can change these by using the --scope argument when encrypting our secret.
 
+## Conclusions
+
+When working with GitOps, secret management can be a tricky subject. Sealed Secrets are one of many alternative solutions to this problem. Here we have discussed two different approaches of using the tool in a multi-cluster environment. Further, we have seen a practical example of how to deploy it in a pragmatic way when dealing with several clusters.
 ## References
 
 1. https://github.com/bitnami-labs/sealed-secrets
