@@ -165,9 +165,9 @@ This shows that it did not have to generate the secret by itself, but searched a
 
 Since this secret is identical to the earlier one, the same Sealed Secret - the one we created in the first cluster - can be decrypted even in this second cluster.
 
->- **NOTE:** When a secret gets encrypted, its name and namespace is used during the actual encryption process. This means that 
->1. It can only be decrypted if the name of the secret is the same as when it was encrypted.
->2. It can only be decrypted in the namespace it was encrypted for. In other words, if the secret was created for namespace1 it won't be able to get decrypted in namespace2. 
+Note that when a secret gets encrypted, its name and namespace is used during the actual encryption process. This means that 
+1. It can only be decrypted if the name of the secret is the same as when it was encrypted.
+2. It can only be decrypted in the namespace it was encrypted for. In other words, if the secret was created for namespace1 it won't be able to get decrypted in namespace2. 
 
 These are security measures and default settings. We can change these by using the --scope argument when encrypting our secret.
 
