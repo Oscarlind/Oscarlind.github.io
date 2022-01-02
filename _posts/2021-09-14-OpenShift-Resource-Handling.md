@@ -30,17 +30,18 @@ resources:
     memory: 2Gi
 ```
 
-A Request is simply a way for us to reserve resources for our application. As we deploy the application, we attach a request to reserve a certain amount of resources for it.
-
+A Request is simply a way for us to reserve resources for our application. As we deploy the application, we attach a request to reserve a certain amount of resources for it. The node that then houses our application will see a drop in its **allocatable** resource pool, corresponding to our request.
 The consequences of this are mainly that:
-1. These resources are then earmarked for our application and other applications can’t access them regardless of whether we actually use the resources or not.
-2. We make sure that the scheduler places our application on a suitable node with sufficient resources to fulfill our request.
+
+1. We make sure that the scheduler places our application on a suitable node with sufficient resources to fulfill our request.
+2. The resources are being reserved from the chosen node's resource pool. The scheduler will not take these reserved resources into consideration for future applications regardless whether we actually use them or not.
 
 We can thus ensure that our application will have better conditions to operate in. It is **important** to note that a Request does **not** limit the amount of resources an application can use.
+Also remember that these reserved resources are taken from the node's allocatable resource pool, which affects the scheduling process, they can still be utilized by any application running on the node as long as the application is not hindered by something like a limit.
 
 A Limit is the actual restriction we place on our application in the form of resource use. We can use these to protect ourselves against scenarios where our application for some reason would start using unnatural amounts of resources.
 
-OpenShift  handles CPU and Memory differently.
+OpenShift handles CPU and Memory differently.
 If we set a limit of 1 CPU core for our application and it tries to use more, OpenShift will start a CPU throttling.
 
 If we instead have a limit of 1Gi memory for the application and it tries to go over, the application will be restarted after it has become OOM.
@@ -59,7 +60,7 @@ The reason why it is smart to place the request slightly higher than the actual 
 
 What we want to avoid with setting too low requests is that the application ends up in situations where there are no available resources that it actually needs.
 
-If, on the other hand, we have far too high requests, it means that we withhold resources from others that we actually do not need anyway. If enough people make far too high requests for their applications, we will also create a kind of artificial lack of resources in the cluster. The actual resource use can be relatively low while the majority of the resources are reserved and not available.
+If, on the other hand, we have far too high requests, it means that we withhold resources from others that we actually do not need anyway. If we start setting way to high resource requests, soon there wont be any node to schedule or applications on due to all the resources being reserved from the allocatable resource pool. Further, if enough people make far too high requests for their applications, we will also create a kind of artificial lack of resources in the cluster. The actual resource use can be relatively low while the majority of the resources are reserved and not available.
 
 When we instead set Limits on our applications, we should take into account the consequences of setting too low and high values.
 
@@ -133,7 +134,7 @@ metadata:
   name: example-limitrange
 spec:
   limits:
-  - default:                   <  #1
+  - default:                   < #1
       memory: 1Gi
       cpu: “2”
     defaultRequests:           < #2
@@ -252,3 +253,4 @@ LimitRanges set the maximum amount of resources we are allowed to request as wel
 1. https://docs.openshift.com/container-platform/4.8/applications/quotas/quotas-setting-per-project.html
 2. https://docs.openshift.com/container-platform/4.8/nodes/clusters/nodes-cluster-limit-ranges.html
 3. https://docs.openshift.com/container-platform/4.8/nodes/clusters/nodes-cluster-overcommit.html
+4. https://docs.openshift.com/container-platform/4.9/nodes/scheduling/nodes-scheduler-about.html
