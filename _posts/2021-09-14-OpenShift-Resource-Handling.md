@@ -4,10 +4,33 @@ Something that can seem unclear when working with OpenShift (and K8s) is how it 
 
 From a more administrative point of view it is perhaps more interesting to know how I avoid single applications and users from using too much of the cluster's resources. How is the distribution of resources done?
 
-
 In OpenShift (and k8s) we use several different components to make sure that our applications and users have the resources they need while at the same time, individuals can’t seize the entire capacity of the cluster.
 
-We do this, mainly, by using carefully designed **Quotas, LimitRanges, Requests and Limits**. I will briefly describe below how these components work and how they are related to each other.
+We do this, mainly, by using carefully designed **Quotas, LimitRanges, Requests and Limits**. I will briefly describe below how these components work and how they are related to each other, but before that, I will explain the scheduling process in a simplified manner.
+
+### The Scheduling Process
+The object that is responsible for placing our workload on our nodes is called the **Scheduler**. This object does this by running all nodes through a set of filters to determine the most suitable location for our application. The primary factor that is being used is compute resources.
+
+Compute resources such as CPU and Memory are derived from the nodes that are part of the cluster. These nodes will have two interesting resource fields, namely ***Capacity*** and ***Allocatable***. Capacity tells us the total compute resource of the node and Allocatable how much of that is available for our workload.
+
+```yaml
+Capacity:
+  cpu:                16
+  ephemeral-storage:  91970284Ki
+  hugepages-1Gi:      0
+  hugepages-2Mi:      0
+  memory:             31970284Ki
+  pods:               250
+Allocatable:
+  cpu:                9
+  ephemeral-storage:  89463813686
+  hugepages-1Gi:      0
+  hugepages-2Mi:      0
+  memory:             14241976Ki
+  pods:               250
+```
+
+![scheduler](images/scheduler.png)
 
 ### Requests and Limits
 
