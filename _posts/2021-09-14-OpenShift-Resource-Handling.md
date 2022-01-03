@@ -30,7 +30,9 @@ Allocatable:
   pods:               250
 ```
 
-![scheduler](https://github.com/Oscarlind/Oscarlind.github.io/blob/main/images/scheduler.png?raw=true))
+Below I have illustrated how this Scheduling Process looks like.
+
+![scheduler](https://github.com/Oscarlind/Oscarlind.github.io/blob/main/images/scheduler.png?raw=true)
 
 ### Requests and Limits
 
